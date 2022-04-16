@@ -12,7 +12,7 @@ PATH_TO_RESULTS = './Letters/results.csv'
 
 
 def clean_dirs():
-    for root, dirs, files in os.walk('./Letters/Frames'):
+    for root, dirs, files in os.walk(PATH_TO_FRAMES):
         for f in files:
             os.unlink(os.path.join(root, f))
         for d in dirs:
@@ -28,9 +28,9 @@ def listdir_nohidden(path):
 def final_prediction(pred):
     """ Returns the most common label from video frames as the final prediction """
     # print( pred )
-    if not pred or len( pred ) == 0:
+    if not pred or len(pred) == 0:
         return ' '
-    pred_final = Counter( pred ).most_common( 1 )[0][0]
+    pred_final = Counter(pred).most_common(1)[0][0]
     return pred_final
 
 
@@ -45,7 +45,7 @@ list_of_videos = listdir_nohidden(PATH_TO_VIDEOS)
 
 # Folder to save hand frames
 if not os.path.exists(PATH_TO_FRAMES):
-    os.makedirs( PATH_TO_FRAMES )
+    os.makedirs(PATH_TO_FRAMES)
 
 # Initialise predicted array
 predicted = []
