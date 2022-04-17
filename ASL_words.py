@@ -72,11 +72,13 @@ predicted = []
 
 for video in list_of_videos:
 
+    # if video != 'CAGE.mp4': continue
+
     path_to_file = PATH_TO_VIDEOS + '/' + video
     video_name = video.split('.')[0]
     print("Test video " + video + " loaded")
 
-    os.system('python ./hand_extractor/hand_extractor.py --source=%s --video=%s --frame_path=%s' % (path_to_file, video_name, PATH_TO_FRAMES) )
+    os.system('python ./hand_extractor/hand_extractor.py --source=%s --video=%s --frame_path=%s' % (path_to_file, video_name, PATH_TO_FRAMES))
 
     keyptPosenet = pd.read_csv(PATH_TO_KEYPOINTS + '/' + video_name + '.csv')
 
@@ -93,7 +95,7 @@ for video in list_of_videos:
 
     for i in range(keyptPosenet.shape[0]-1):
         dist = math.sqrt( ((coordRWx[i + 1] - coordRWx[i]) ** 2) + ((coordRWy[i + 1] - coordRWy[i]) ** 2))
-        if dist < threshold:
+        if dist < threshold and coordRWy[i] < 600:
             frame_arr.append(i)
     
     frames = []
@@ -113,20 +115,21 @@ for video in list_of_videos:
     
     if (end - start) >= 50:
             frames.append([start, end])
-    
-    print(frame_arr)
-    print(frames)
+
+    print('Frames: ', frames)
+
+    # frames = [[0, 182], [188, 288], [295, 525], [535, 640], [645, 870], [880, 980], [995, 1160]] # CAGE
+    # frames = [[0, 170], [175, 266], [275, 489], [503, 587], [593, 756]] # EYE
 
     for i in range(len(frames)):
-        if i%2 == 0:
-            prediction_frames = predict_words_from_frames_range(PATH_TO_FRAMES + '/' + video_name, frames[i][0], frames[i][1])
-            prediction = final_prediction(prediction_frames)
-            letters.append(prediction)
+        # if i%2 == 0:
+        prediction_frames = predict_words_from_frames_range(PATH_TO_FRAMES + '/' + video_name, frames[i][0], frames[i][1])
+        prediction = final_prediction(prediction_frames)
+        letters.append(prediction)
 
     predword = ''.join(letters).upper()
     actualLabel = video_name
     print("\nTrue Value: " + actualLabel + " Prediction: " + predword)
-    time.sleep(1)
     predicted.append([predword, actualLabel])
 
 df = DataFrame (predicted, columns=['predicted', 'actual'])

@@ -121,9 +121,6 @@ def predict_words_from_frames_range(video_folder_path, start, end):
     names_arr = [video_folder_path + '\\' + str(i) + '.png' for i in range(start, end+1)]
 
     files = [frame for frame in frames if frame in names_arr]
-
-    print(len(files))
-    print(len(names_arr))
     
     # sort image frames
     files.sort()

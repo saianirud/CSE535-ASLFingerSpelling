@@ -10,7 +10,6 @@ detection_graph, sess = detector_utils.load_inference_graph()
 
 def check_rotation(path_video_file):
     # this returns meta-data of the video file in form of a dictionary
-    print(path_video_file)
     meta_dict = ffmpeg.probe(path_video_file)
 
     rotate = meta_dict.get('streams', [dict(tags=dict())])[0].get('tags', dict()).get('rotate', 0)

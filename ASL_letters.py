@@ -56,7 +56,7 @@ for video in list_of_videos:
     video_name = video.split('.')[0]
     print('Test video ' + video + ' loaded')
     
-    os.system('python ./hand_extractor/hand_extractor.py --source=%s --video=%s --frame_path=%s' % (path_to_file, video_name, PATH_TO_FRAMES) )
+    os.system('python ./hand_extractor/hand_extractor.py --source=%s --video=%s --frame_path=%s' % (path_to_file, video_name, PATH_TO_FRAMES))
     
     arrPred = predict_labels_from_frames(PATH_TO_FRAMES + '/' + video_name)
     
