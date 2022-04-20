@@ -1,14 +1,29 @@
 import cv2
 import os
-from os.path import dirname, join
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    '-videos',
+    '--path_to_videos',
+    dest='path_to_videos',
+    default=0,
+    help='give a videos folder path')
+parser.add_argument(
+    '-frames',
+    '--path_to_frames',
+    dest='path_to_frames',
+    default=0,
+    help='give a frames folder path')
+args = parser.parse_args()
 
 # Path to the directory containing Video Files
-path_to_video_files = join(dirname(__file__), '..', 'Words', 'Videos')
-path_to_frames = join(dirname(__file__), '..', 'Posenet_Frames')
-video_files = os.listdir(path_to_video_files)
+path_to_videos = args.path_to_videos
+path_to_frames = args.path_to_frames
+video_files = os.listdir(path_to_videos)
 
 for file in video_files:
-    video = cv2.VideoCapture(path_to_video_files + '/' + file)
+    video = cv2.VideoCapture(path_to_videos + '/' + file)
     # flip =True
     count = 0
     success = 1

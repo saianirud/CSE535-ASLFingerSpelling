@@ -53,8 +53,6 @@ if (getArgumentValue === undefined) {
     photo_path_to_frames = getArgumentValue;
 }
 
-console.log(photo_path_to_frames);
-
 
 /**
  * Asynchronous Function to decide poses for a set of images and storing it in a single json file
@@ -112,7 +110,7 @@ async function cascading_images_pose_estimation(photo_path, choice) {
                     pose_list.push(pose);
                 }
 
-                fs.writeFileSync(func_path + items[i] + ".json", JSON.stringify(pose_list));
+                fs.writeFileSync(func_path + "key_points.json", JSON.stringify(pose_list));
                 console.log("Key Points File for \"" + items[i] + "\" has been created");
             }
         }

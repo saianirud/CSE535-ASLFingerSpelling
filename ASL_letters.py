@@ -8,11 +8,17 @@ from alphabet_mode_main import predict_labels_from_frames
 
 PATH_TO_VIDEOS = './Letters/Videos'
 PATH_TO_FRAMES = './Letters/Frames'
+PATH_TO_HAND_FRAMES = './Letters/Hand_Frames'
 PATH_TO_RESULTS = './Letters/results.csv'
 
 
 def clean_dirs():
     for root, dirs, files in os.walk(PATH_TO_FRAMES):
+        for f in files:
+            os.unlink(os.path.join(root, f))
+        for d in dirs:
+            shutil.rmtree(os.path.join(root, d))
+    for root, dirs, files in os.walk(PATH_TO_HAND_FRAMES):
         for f in files:
             os.unlink(os.path.join(root, f))
         for d in dirs:
@@ -37,15 +43,21 @@ def final_prediction(pred):
 
 clean_dirs()
 
-# Initialise the prediction array
-arrPred = []
-
-# Get list of test videos
-list_of_videos = listdir_nohidden(PATH_TO_VIDEOS)
-
 # Folder to save hand frames
 if not os.path.exists(PATH_TO_FRAMES):
     os.makedirs(PATH_TO_FRAMES)
+if not os.path.exists(PATH_TO_HAND_FRAMES):
+    os.makedirs(PATH_TO_HAND_FRAMES)
+
+# Initialise the prediction array
+arrPred = []
+
+os.system('python ./posenet/Frames_Extractor.py --path_to_videos=%s --path_to_frames=%s' % (PATH_TO_VIDEOS, PATH_TO_FRAMES))
+os.system('node ./posenet/scale_to_videos.js %s' % (PATH_TO_FRAMES))
+os.system('python ./posenet/convert_to_csv.py --path_to_videos=%s --path_to_frames=%s' % (PATH_TO_VIDEOS, PATH_TO_FRAMES))
+
+# Get list of test videos
+list_of_videos = listdir_nohidden(PATH_TO_VIDEOS)
 
 # Initialise predicted array
 predicted = []
@@ -56,9 +68,10 @@ for video in list_of_videos:
     video_name = video.split('.')[0]
     print('Test video ' + video + ' loaded')
     
-    os.system('python ./hand_extractor/hand_extractor.py --source=%s --video=%s --frame_path=%s' % (path_to_file, video_name, PATH_TO_FRAMES))
+    os.system('python ./hand_extractor/hand_extractor.py --source=%s --video=%s --frame_path=%s' % (path_to_file, video_name, PATH_TO_HAND_FRAMES))
+    # os.system('python ./hand_extractor.py --path_to_frames=%s --path_to_hand_frames=%s' % (PATH_TO_FRAMES + '/' + video_name, PATH_TO_HAND_FRAMES + '/' + video_name))
     
-    arrPred = predict_labels_from_frames(PATH_TO_FRAMES + '/' + video_name)
+    arrPred = predict_labels_from_frames(PATH_TO_HAND_FRAMES + '/' + video_name)
     
     # Calculate Prediction and handle none cases
     try:
