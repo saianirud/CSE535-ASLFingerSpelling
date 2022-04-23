@@ -39,7 +39,7 @@ if __name__ == '__main__':
             if i < len(rightWrist_x):
                 image_path = path_to_frames + '/' + video_frame
                 img = cv2.imread(image_path)
-                cropped_image = img[round(rightWrist_y[i])-200:round(rightWrist_y[i])+50, round(rightWrist_x[i])-200:round(rightWrist_x[i])+125]
+                cropped_image = img[round(rightWrist_y[i])-300:round(rightWrist_y[i])+100, round(rightWrist_x[i])-200:round(rightWrist_x[i])+200]
                 # flipped_cropped_image = cv2.flip(cropped_image,1)
                 image_path = path_to_hand_frames + '/' + str(i) + '.png'
                 cv2.imwrite(image_path, cropped_image)

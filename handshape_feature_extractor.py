@@ -63,9 +63,10 @@ class HandShapeFeatureExtractor:
 
     def extract_feature(self, image):
         try:
-            img_arr = self.__pre_process_input_image(image)
-            # input = tf.keras.Input(tensor=image)
-            return self.model.predict(img_arr)
+            test_image = tf.keras.utils.load_img(image, target_size = (256, 256))
+            test_image = tf.keras.utils.img_to_array(test_image)
+            test_image = np.expand_dims(test_image, axis = 0)
+            return self.model.predict(test_image)
         except Exception as e:
             raise
 

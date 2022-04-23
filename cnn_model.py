@@ -1,6 +1,6 @@
 import tensorflow as tf
-from tf.keras import Sequential
-from tf.keras import layers
+from tensorflow.keras import Sequential
+from tensorflow.keras import layers
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -68,6 +68,7 @@ if args.load_model == None:
   ])
   model.summary()
 else:
+  print('\nLoading Model: ' + args.load_model)
   model = tf.keras.models.load_model(args.load_model)
 
 if args.load_model == None:

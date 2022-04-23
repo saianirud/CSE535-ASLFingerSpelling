@@ -13,29 +13,10 @@ def get_inference_vector_one_frame_alphabet(files_list):
 
     model = HandShapeFeatureExtractor.get_instance()
     vectors = []
-    video_names = []
-    step = int(len(files_list) / 100)
-    if step == 0:
-        step = 1
 
-    count = 0
     for video_frame in files_list:
-        # print(video_frames)
-        # assert len(video_frames) == 6
-        img = cv2.imread(video_frame)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-        results = model.extract_feature(img)
-        results = np.squeeze(results)
-        predicted = np.where(results==max(results))[0][0]
-
-        vectors.append(predicted)
-        video_names.append(os.path.basename(video_frame))
-
-        count += 1
-        if count % step == 0:
-            # sys.stdout.write("-")
-            sys.stdout.flush()
+        results = model.extract_feature(video_frame)
+        vectors.append(np.argmax(results))
 
     return vectors
 
