@@ -51,7 +51,6 @@ def extract_hand_frames():
             if not os.path.exists(path_to_hand_frames):
                 os.mkdir(path_to_hand_frames)
             
-            # os.system('python ./hand_extractor/hand_extractor.py --source=%s --video=%s --frame_path=%s' % (path_to_file, video_name, path_to_hand_frames))
             os.system('python ./hand_extractor.py --path_to_frames=%s --path_to_hand_frames=%s' % (path_to_frames + '/' + video_name, path_to_hand_frames + '/' + video_name))
             print('Hand Frames extracted for Alphabet: {0}'.format(path_to_file))
 
