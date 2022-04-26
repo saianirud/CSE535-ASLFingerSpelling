@@ -119,7 +119,7 @@ for root, dirs, files in os.walk(PATH_TO_VIDEOS):
         video_name = video.split('.')[0]
 
         print('\n********** Extracting Hand Frames for Video: {0} **********\n'.format(video))
-        # os.system('python ./hand_extractor.py --path_to_frames=%s --path_to_hand_frames=%s' % (PATH_TO_FRAMES + '/' + video_name, PATH_TO_HAND_FRAMES + '/' + video_name))
+        os.system('python ./hand_extractor.py --path_to_frames=%s --path_to_hand_frames=%s' % (PATH_TO_FRAMES + '/' + video_name, PATH_TO_HAND_FRAMES + '/' + video_name))
         print('Hand Frames extracted for Video: {0}'.format(video))
 
         frames = segment_videos(video_name)
