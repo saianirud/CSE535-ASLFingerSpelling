@@ -8,7 +8,7 @@ from handshape_feature_extractor import HandShapeFeatureExtractor
 def get_inference_vector_one_frame_alphabet(files_list):
     # model trained based on https://www.kaggle.com/mrgeislinger/asl-rgb-depth-fingerspelling-spelling-it-out
 
-    model = HandShapeFeatureExtractor.get_instance()
+    model = HandShapeFeatureExtractor()
     vectors = []
 
     for video_frame in files_list:

@@ -26,6 +26,11 @@ def clean_dirs():
             os.unlink(os.path.join(root, f))
         for d in dirs:
             shutil.rmtree(os.path.join(root, d))
+    for root, dirs, files in os.walk(PATH_TO_COMBINED_HAND_FRAMES):
+        for f in files:
+            os.unlink(os.path.join(root, f))
+        for d in dirs:
+            shutil.rmtree(os.path.join(root, d))
 
 
 def generate_posenet_keypoints():
@@ -35,6 +40,7 @@ def generate_posenet_keypoints():
             path_to_videos, path_to_frames = os.path.join(PATH_TO_VIDEOS, dir), os.path.join(PATH_TO_FRAMES, dir)
             if not os.path.exists(path_to_frames):
                 os.mkdir(path_to_frames)
+            print('\nPerson: ' + dir)
             os.system('python ./posenet/Frames_Extractor.py --path_to_videos=%s --path_to_frames=%s' % (path_to_videos, path_to_frames))
             os.system('node ./posenet/scale_to_videos.js %s' % (path_to_frames))
             os.system('python ./posenet/convert_to_csv.py --path_to_videos=%s --path_to_frames=%s' % (path_to_videos, path_to_frames))
@@ -70,14 +76,23 @@ def generate_combined_frames():
                         count += 1
 
 
-def predict_alphabet(video_name): 
-    print('\n********** Predict Alphabet: {0} **********\n'.format(video_name))
-    prediction_frames = predict_labels_from_frames(PATH_TO_COMBINED_HAND_FRAMES + '/' + video_name)
-    return mode(prediction_frames)
+def predict_alphabets(): 
+    output = []
+    for root, dirs, files in os.walk(PATH_TO_COMBINED_HAND_FRAMES):
+        for dir in dirs:
+            print('\n********** Predict Alphabet: {0} **********\n'.format(dir))
+            prediction_frames = predict_labels_from_frames(PATH_TO_COMBINED_HAND_FRAMES + '/' + dir)
+            prediction = mode(prediction_frames)
+            print('Prediction: {0}\tGround Truth: {1}'.format(prediction, dir))
+            output.append([prediction, dir])
+
+    df = DataFrame(output, columns=['predicted', 'ground_truth'])
+    print(classification_report(df.predicted, df.ground_truth))
+    df.to_csv(PATH_TO_RESULTS)
 
 
 
-clean_dirs()
+# clean_dirs()
 
 # Folder to save hand frames
 if not os.path.exists(PATH_TO_FRAMES):
@@ -86,9 +101,6 @@ if not os.path.exists(PATH_TO_HAND_FRAMES):
     os.makedirs(PATH_TO_HAND_FRAMES)
 if not os.path.exists(PATH_TO_COMBINED_HAND_FRAMES):
     os.makedirs(PATH_TO_COMBINED_HAND_FRAMES)
-
-# Initialise predicted array
-output = []
 
 # Create posenet wrist points
 generate_posenet_keypoints()
@@ -103,15 +115,11 @@ generate_combined_frames()
 os.system('python ./cnn_model.py --path_to_dataset=%s --save_model=%s' % ('./asl-alphabet/asl_alphabet_train/', 'cnn_model.h5'))
 
 #predict alphabet
-for root, dirs, files in os.walk(PATH_TO_COMBINED_HAND_FRAMES):
-    for dir in dirs:
-        prediction = predict_alphabet(dir)
-        print('Prediction: {0}\tGround Truth: {1}'.format(prediction, dir))
-        output.append([prediction, dir])
-
-df = DataFrame(output, columns=['predicted', 'ground_truth'])
-print(classification_report(df.predicted, df.ground_truth))
-df.to_csv(PATH_TO_RESULTS)
+predict_alphabets()
 
 # finetune model on our dataset
 os.system('python ./cnn_model.py --path_to_dataset=%s --save_model=%s --load_model=%s' % (PATH_TO_COMBINED_HAND_FRAMES + '/', 'cnn_model.h5', 'cnn_model.h5'))
+# os.system('python ./cnn_model.py --path_to_dataset=%s --save_model=%s --load_model=%s' % ('./Letters/Combined_Hand_Frames_26_alphabets/', 'cnn_model.h5', 'cnn_model.h5'))
+
+#predict alphabet
+predict_alphabets()
