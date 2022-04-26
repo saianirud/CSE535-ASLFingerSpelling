@@ -1,6 +1,12 @@
 import os
 import shutil
 from pathlib import Path
+from statistics import mode
+from pandas import DataFrame
+from sklearn.metrics import classification_report
+from alphabet_mode_main import predict_labels_from_frames
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+
 
 PATH_TO_VIDEOS = './Letters/Videos'
 PATH_TO_FRAMES = './Letters/Frames'
@@ -27,6 +33,8 @@ def generate_posenet_keypoints():
     for root, dirs, files in os.walk(PATH_TO_VIDEOS):
         for dir in dirs:
             path_to_videos, path_to_frames = os.path.join(PATH_TO_VIDEOS, dir), os.path.join(PATH_TO_FRAMES, dir)
+            if not os.path.exists(path_to_frames):
+                os.mkdir(path_to_frames)
             os.system('python ./posenet/Frames_Extractor.py --path_to_videos=%s --path_to_frames=%s' % (path_to_videos, path_to_frames))
             os.system('node ./posenet/scale_to_videos.js %s' % (path_to_frames))
             os.system('python ./posenet/convert_to_csv.py --path_to_videos=%s --path_to_frames=%s' % (path_to_videos, path_to_frames))
@@ -38,10 +46,14 @@ def extract_hand_frames():
             path_to_file = os.path.join(root, video)
             path_to_frames, path_to_hand_frames = os.path.join(PATH_TO_FRAMES, Path(path_to_file).parent.name), os.path.join(PATH_TO_HAND_FRAMES, Path(path_to_file).parent.name)
             video_name = video.split('.')[0]
-            print('\n**********Extracting Hand Frames for Alphabet: {0}**********\n'.format(path_to_file))
+            print('\n********** Extracting Hand Frames for Alphabet: {0} **********\n'.format(path_to_file))
+
+            if not os.path.exists(path_to_hand_frames):
+                os.mkdir(path_to_hand_frames)
             
-            os.system('python ./hand_extractor/hand_extractor.py --source=%s --video=%s --frame_path=%s' % (path_to_file, video_name, path_to_hand_frames))
-            # os.system('python ./hand_extractor.py --path_to_frames=%s --path_to_hand_frames=%s' % (path_to_frames + '/' + video_name, path_to_hand_frames + '/' + video_name))
+            # os.system('python ./hand_extractor/hand_extractor.py --source=%s --video=%s --frame_path=%s' % (path_to_file, video_name, path_to_hand_frames))
+            os.system('python ./hand_extractor.py --path_to_frames=%s --path_to_hand_frames=%s' % (path_to_frames + '/' + video_name, path_to_hand_frames + '/' + video_name))
+            print('Hand Frames extracted for Alphabet: {0}'.format(path_to_file))
 
 
 def generate_combined_frames():
@@ -59,6 +71,12 @@ def generate_combined_frames():
                         count += 1
 
 
+def predict_alphabet(video_name): 
+    print('\n********** Predict Alphabet: {0} **********\n'.format(video_name))
+    prediction_frames = predict_labels_from_frames(PATH_TO_COMBINED_HAND_FRAMES + '/' + video_name)
+    return mode(prediction_frames)
+
+
 
 clean_dirs()
 
@@ -70,6 +88,9 @@ if not os.path.exists(PATH_TO_HAND_FRAMES):
 if not os.path.exists(PATH_TO_COMBINED_HAND_FRAMES):
     os.makedirs(PATH_TO_COMBINED_HAND_FRAMES)
 
+# Initialise predicted array
+output = []
+
 # Create posenet wrist points
 generate_posenet_keypoints()
 
@@ -80,7 +101,18 @@ extract_hand_frames()
 generate_combined_frames()
 
 # train model on kaggle dataset
-os.system('python ./cnn_model.py --path_to_dataset=%s --save_model=%s' % ('./asl-alphabet/asl_alphabet_train/', 'cnn.h5'))
+os.system('python ./cnn_model.py --path_to_dataset=%s --save_model=%s' % ('./asl-alphabet/asl_alphabet_train/', 'cnn_model.h5'))
+
+#predict alphabet
+for root, dirs, files in os.walk(PATH_TO_COMBINED_HAND_FRAMES):
+    for dir in dirs:
+        prediction = predict_alphabet(dir)
+        print('Prediction: {0}\tGround Truth: {1}'.format(prediction, dir))
+        output.append([prediction, dir])
+
+df = DataFrame(output, columns=['predicted', 'ground_truth'])
+print(classification_report(df.predicted, df.ground_truth))
+df.to_csv(PATH_TO_RESULTS)
 
 # finetune model on our dataset
-os.system('python ./cnn_model.py --path_to_dataset=%s --save_model=%s --load_model=%s' % (PATH_TO_COMBINED_HAND_FRAMES + '/', 'cnn_model.h5', 'cnn.h5'))
+os.system('python ./cnn_model.py --path_to_dataset=%s --save_model=%s --load_model=%s' % (PATH_TO_COMBINED_HAND_FRAMES + '/', 'cnn_model.h5', 'cnn_model.h5'))

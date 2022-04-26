@@ -1,7 +1,4 @@
 import glob
-import sys
-
-import cv2
 import numpy as np
 import os
 import tensorflow as tf
@@ -65,34 +62,7 @@ def predict_labels_from_frames(video_folder_path):
     
     return final_predictions
 
-def predict_words_from_frames(video_folder_path, till):
-    
-    files = []
-    # wildcard to select all frames for given video file
-    
-    path = os.path.join(video_folder_path, "*.png")
-    frames = glob.glob(path)
-    
-    # sort image frames
-    frames.sort()
-    files = frames[:till]
-    
-    prediction_vector = get_inference_vector_one_frame_alphabet(files)
-    
-    label_file = 'output_labels_alphabet.txt'
-    id_to_labels, labels_to_id = load_label_dicts(label_file)
-    
-    final_predictions=[]
-    
-    for i in range(len(prediction_vector)):
-        for ins in labels_to_id:
-            if prediction_vector[i] == labels_to_id[ins]:
-                final_predictions.append(ins)
-    
-    return final_predictions
-
-
-def predict_words_from_frames_range(video_folder_path, start, end):
+def predict_words_from_frames(video_folder_path, start, end):
     
     files = []
     # wildcard to select all frames for given video file

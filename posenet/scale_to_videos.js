@@ -62,10 +62,9 @@ if (getArgumentValue === undefined) {
  * @param choice
  */
 async function cascading_images_pose_estimation(photo_path, choice) {
-    console.log("Starting to estimate pose values for list of Video frames in the given path : " + photo_path);
     let config;
     if (choice === '1') {
-        console.log("Loading model : MobileNetV1");
+        console.log("Loading model : MobileNetV1\n");
         config = {
             architecture: guiState.model.architecture,
             outputStride: guiState.model.outputStride,
@@ -74,7 +73,7 @@ async function cascading_images_pose_estimation(photo_path, choice) {
             quantBytes: guiState.model.quantBytes
         };
     } else {
-        console.log("Loading Model : ResNet50");
+        console.log("Loading Model : ResNet50\n");
         config = {
             architecture: "ResNet50",
             outputStride: guiState.model.outputStride,
@@ -94,9 +93,7 @@ async function cascading_images_pose_estimation(photo_path, choice) {
         for (let i = 0; i < items.length; i++) {
             let pose_list = [];
             if (path.extname(items[i]) === "") {
-                console.log(items[i]);
                 func_path = photo_path + "/" + items[i] + "/";
-
                 let length = fs.readdirSync(func_path).length;
                 for (let i = 0; i < length - 1; i++) {
                     let image = await loadImage(func_path + i + ".png");
@@ -111,7 +108,7 @@ async function cascading_images_pose_estimation(photo_path, choice) {
                 }
 
                 fs.writeFileSync(func_path + "key_points.json", JSON.stringify(pose_list));
-                console.log("Key Points File for \"" + items[i] + "\" has been created");
+                console.log("Key Points generated for file: " + items[i]);
             }
         }
     });
@@ -128,8 +125,8 @@ async function loadImage(path) {
     return promise;
 }
 
-readline.question(`Input your Architecture.\n 1. MobileNetV1\n 2. ResNet50\n`, (name) => {
-    cascading_images_pose_estimation(photo_path_to_frames, name).then(r => console.log("Key Points generated Successfully."), () => console.log("Error occurred in generating keypoints."));
+readline.question(`\nInput your Architecture.\n 1. MobileNetV1\n 2. ResNet50\n`, (name) => {
+    cascading_images_pose_estimation(photo_path_to_frames, name);
     readline.close();
     process.stdin.destroy();
 });

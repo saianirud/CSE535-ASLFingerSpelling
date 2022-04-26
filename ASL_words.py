@@ -3,11 +3,9 @@ import math
 import shutil
 import pandas as pd
 from pandas import DataFrame
-import time
-from sklearn.metrics import classification_report
 from statistics import mode
-from collections import Counter
-from alphabet_mode_main import predict_labels_from_frames, predict_words_from_frames, predict_words_from_frames_range
+from alphabet_mode_main import predict_words_from_frames
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 PATH_TO_VIDEOS = './Words/Videos'
 PATH_TO_FRAMES = './Words/Frames'
@@ -38,7 +36,7 @@ def generate_posenet_keypoints():
 
 def segment_videos(video_name):
 
-    print('\n**********Segmenting Video: {0}**********\n'.format(video_name))
+    print('\n********** Segmenting Video: {0} **********\n'.format(video_name))
     keyptPosenet = pd.read_csv(PATH_TO_FRAMES + '/' + video_name + '/' + 'key_points.csv')
 
     coordRWx = keyptPosenet.rightWrist_x
@@ -74,24 +72,27 @@ def segment_videos(video_name):
     return frames
 
 
-def final_prediction(pred):
-    """ Returns the most common label from video frames as the final prediction """
-    # print( pred )
-    if not pred or len(pred) == 0:
-        return ' '
-    pred_final = Counter(pred).most_common(1)[0][0]
-    return pred_final
-
-
 def predict_word(frames, video_name): 
-    print('\n**********Predict Video: {0}**********\n'.format(video_name))
+    print('\n********** Predict Video: {0} **********\n'.format(video_name))
     letters = []
     for i in range(len(frames)):
-        prediction_frames = predict_words_from_frames_range(PATH_TO_HAND_FRAMES + '/' + video_name, frames[i][0], frames[i][1])
-        prediction = final_prediction(prediction_frames)
+        prediction_frames = predict_words_from_frames(PATH_TO_HAND_FRAMES + '/' + video_name, frames[i][0], frames[i][1])
+        prediction = mode(prediction_frames)
         letters.append(prediction)
 
     return ''.join(letters).upper()
+
+
+def classification_report(df):
+    accuracy = []
+    for index, row in df.iterrows():
+        count = 0
+        for i in range(min(len(row['ground_truth']), len(row['predicted']))):
+            if row['ground_truth'][i] == row['predicted'][i]:
+                count += 1
+        accuracy.append(count * 100 / len(row['ground_truth']))
+    df['accuracy (%)'] = accuracy
+    return df
 
 
 
@@ -112,26 +113,25 @@ generate_posenet_keypoints()
 for root, dirs, files in os.walk(PATH_TO_VIDEOS):
     for video in files:
 
-        # if video != 'ZIP.mp4': continue
+        print('\n' + '-'*100)
 
         path_to_file = PATH_TO_VIDEOS + '/' + video
         video_name = video.split('.')[0]
 
-        # print('\n**********Extracting Hand Frames for Video: {0}**********\n'.format(video))
-        # os.system('python ./hand_extractor/hand_extractor.py --source=%s --video=%s --frame_path=%s' % (path_to_file, video_name, PATH_TO_HAND_FRAMES))
-        os.system('python ./hand_extractor.py --path_to_frames=%s --path_to_hand_frames=%s' % (PATH_TO_FRAMES + '/' + video_name, PATH_TO_HAND_FRAMES + '/' + video_name))
+        print('\n********** Extracting Hand Frames for Video: {0} **********\n'.format(video))
+        # os.system('python ./hand_extractor.py --path_to_frames=%s --path_to_hand_frames=%s' % (PATH_TO_FRAMES + '/' + video_name, PATH_TO_HAND_FRAMES + '/' + video_name))
+        print('Hand Frames extracted for Video: {0}'.format(video))
 
         frames = segment_videos(video_name)
 
-        # frames = [[0, 160], [250, 480], [570, 726]] # BAD
-        # frames = [[0, 180], [260, 450], [550, 757]] # HAT
-        # frames = [[0, 130], [220, 410], [490, 686]] # HAT
-
         prediction = predict_word(frames, video_name)
-        print('\nPrediction: {0}\tGround Truth: {1}\n'.format(prediction, video_name))
+        print('Prediction: {0}\tGround Truth: {1}'.format(prediction, video_name))
         output.append([prediction, video_name])
 
 
-df = DataFrame(output, columns=['predicted', 'actual'])
-print(classification_report(df.predicted, df.actual))
+df = DataFrame(output, columns=['predicted', 'ground_truth'])
+print('\n' + '-'*100)
+df = classification_report(df)
+print(df)
+print('\nAverage Accuracy: {0}\n'.format(df['accuracy (%)'].mean()))
 df.to_csv(PATH_TO_RESULTS)
