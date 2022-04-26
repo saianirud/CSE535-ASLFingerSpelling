@@ -92,7 +92,7 @@ def predict_alphabets():
 
 
 
-# clean_dirs()
+clean_dirs()
 
 # Folder to save hand frames
 if not os.path.exists(PATH_TO_FRAMES):
