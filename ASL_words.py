@@ -35,6 +35,10 @@ def generate_posenet_keypoints():
 
 
 def segment_videos(video_name):
+    ''' 
+        We'll calculate the difference between positions of rights hand wrist points in consecutive frames. 
+        If the difference is greater than a certain threshold, we'll assume that there is a transition of letters of the word.
+    '''
 
     print('\n********** Segmenting Video: {0} **********\n'.format(video_name))
     keyptPosenet = pd.read_csv(PATH_TO_FRAMES + '/' + video_name + '/' + 'key_points.csv')
