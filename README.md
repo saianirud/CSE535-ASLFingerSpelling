@@ -2,7 +2,7 @@
 
 ## How to run
 
-You need to have `node` and `python` installed on your environment to run this code.<br><br>
+You need to have `node` and `python` installed on your environment to run this code.<br>
 
 1. Create the following directories `Letters/Videos`, `Words/Videos` and `asl-alphabet/asl_alphabet_train`.
 2. Put the videos of your alphabets in the directory `Letters/Videos/{your_name}/` and keep the video name as the alphabet name.<br>
