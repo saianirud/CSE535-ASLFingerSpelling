@@ -119,7 +119,6 @@ predict_alphabets()
 
 # finetune model on our dataset
 os.system('python ./cnn_model.py --path_to_dataset=%s --save_model=%s --load_model=%s' % (PATH_TO_COMBINED_HAND_FRAMES + '/', 'cnn_model.h5', 'cnn_model.h5'))
-# os.system('python ./cnn_model.py --path_to_dataset=%s --save_model=%s --load_model=%s' % ('./Letters/Combined_Hand_Frames_26_alphabets/', 'cnn_model.h5', 'cnn_model.h5'))
 
 #predict alphabet
 predict_alphabets()

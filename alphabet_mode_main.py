@@ -6,8 +6,7 @@ from handshape_feature_extractor import HandShapeFeatureExtractor
 
 
 def get_inference_vector_one_frame_alphabet(files_list):
-    # model trained based on https://www.kaggle.com/mrgeislinger/asl-rgb-depth-fingerspelling-spelling-it-out
-
+    
     model = HandShapeFeatureExtractor()
     vectors = []
 
@@ -39,12 +38,9 @@ def load_label_dicts(label_file):
 def predict_labels_from_frames(video_folder_path):
     
     files = []
-    # wildcard to select all frames for given video file
     
     path = os.path.join(video_folder_path, "*.png")
     frames = glob.glob(path)
-    
-    # sort image frames
     frames.sort()
     files = frames
     
@@ -65,17 +61,13 @@ def predict_labels_from_frames(video_folder_path):
 def predict_words_from_frames(video_folder_path, start, end):
     
     files = []
-    # wildcard to select all frames for given video file
     
     path = os.path.join(video_folder_path, "*.png")
     frames = glob.glob(path)
     names_arr = [video_folder_path + '\\' + str(i) + '.png' for i in range(start, end+1)]
 
     files = [frame for frame in frames if frame in names_arr]
-    
-    # sort image frames
     files.sort()
-    # files = frames[start:end]
     
     prediction_vector = get_inference_vector_one_frame_alphabet(files)
     

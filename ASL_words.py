@@ -43,14 +43,14 @@ def segment_videos(video_name):
     print('\n********** Segmenting Video: {0} **********\n'.format(video_name))
     keyptPosenet = pd.read_csv(PATH_TO_FRAMES + '/' + video_name + '/' + 'key_points.csv')
 
-    coordRWx = keyptPosenet.rightWrist_x
-    coordRWy = keyptPosenet.rightWrist_y
+    rightWrist_x = keyptPosenet.rightWrist_x
+    rightWrist_y = keyptPosenet.rightWrist_y
     threshold = 20
     frame_arr = []
 
     for i in range(keyptPosenet.shape[0]-1):
-        dist = math.sqrt( ((coordRWx[i + 1] - coordRWx[i]) ** 2) + ((coordRWy[i + 1] - coordRWy[i]) ** 2))
-        if dist < threshold and coordRWy[i] < 600:
+        dist = math.sqrt( ((rightWrist_x[i + 1] - rightWrist_x[i]) ** 2) + ((rightWrist_y[i + 1] - rightWrist_y[i]) ** 2))
+        if dist < threshold and rightWrist_y[i] < 600:
             frame_arr.append(i)
     
     frames = []
@@ -119,7 +119,6 @@ for root, dirs, files in os.walk(PATH_TO_VIDEOS):
 
         print('\n' + '-'*100)
 
-        path_to_file = PATH_TO_VIDEOS + '/' + video
         video_name = video.split('.')[0]
 
         print('\n********** Extracting Hand Frames for Video: {0} **********\n'.format(video))
