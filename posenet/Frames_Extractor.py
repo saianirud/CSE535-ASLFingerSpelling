@@ -46,3 +46,4 @@ for file in video_files:
             if arr_img[i] is not None:
                 cv2.imwrite(new_path + "/%d.png" % count, arr_img[i])
                 count += 1
+    print('Frames extracted for file: {0}'.format(file))

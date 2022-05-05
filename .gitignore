@@ -1,9 +1,8 @@
 __pycache__/
-cnn_model.h5
+*.h5
 *.DS_Store
 Letters/
 Words/
 posenet/node_modules
 posenet/package-lock.json
-Posenet_Frames/
-Posenet_Keypoints/
+asl-alphabet/

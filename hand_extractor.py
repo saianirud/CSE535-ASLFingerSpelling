@@ -21,28 +21,30 @@ if __name__ == '__main__':
     path_to_frames = args.path_to_frames
     path_to_hand_frames = args.path_to_hand_frames
 
-    pos_key = pd.read_csv(path_to_frames + '/' + 'key_points.csv')
-    rightWrist_x = pos_key.rightWrist_x
-    rightWrist_y = pos_key.rightWrist_y
-    leftWrist_x = pos_key.leftWrist_x
-    leftWrist_y = pos_key.leftWrist_y
-
-    frames =  [file for file in os.listdir(path_to_frames) if file.endswith('.png')]
-    files = sorted(frames, key=lambda x: int(os.path.splitext(x)[0]))
-    i = 0
-
     if not os.path.isdir(path_to_hand_frames):
         os.mkdir(path_to_hand_frames)
 
-    for video_frame in files:
+    # get frames from path_to_frames
+    frames =  [f for f in os.listdir(path_to_frames) if f.endswith('.png')]
+    sorted_frames = sorted(frames, key=lambda x: int(os.path.splitext(x)[0]))
+
+    # posenet key points
+    key_points = pd.read_csv(path_to_frames + '/' + 'key_points.csv')
+    rightWrist_x = key_points.rightWrist_x
+    rightWrist_y = key_points.rightWrist_y
+    
+    i = 0
+    for frame in sorted_frames:
         try:
             if i < len(rightWrist_x):
-                image_path = path_to_frames + '/' + video_frame
-                img = cv2.imread(image_path)
-                cropped_image = img[round(rightWrist_y[i])-200:round(rightWrist_y[i])+50, round(rightWrist_x[i])-200:round(rightWrist_x[i])+125]
-                # flipped_cropped_image = cv2.flip(cropped_image,1)
-                image_path = path_to_hand_frames + '/' + str(i) + '.png'
-                cv2.imwrite(image_path, cropped_image)
+                # cropping the hand part from the frame using posenet wrist points
+                image = cv2.imread(path_to_frames + '/' + frame)
+                hand_frame = image[
+                    max(round(rightWrist_y[i])-300, 0):round(rightWrist_y[i])+100, 
+                    max(round(rightWrist_x[i])-200, 0):round(rightWrist_x[i])+200
+                ]
+                # saving the cropped hand to an image file
+                cv2.imwrite(path_to_hand_frames + '/' + str(i) + '.png', hand_frame)
                 i = i + 1
         except:
             i = i + 1

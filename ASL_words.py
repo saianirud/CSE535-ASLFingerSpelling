@@ -3,16 +3,15 @@ import math
 import shutil
 import pandas as pd
 from pandas import DataFrame
-import time
-from sklearn.metrics import classification_report
 from statistics import mode
-from collections import Counter
-from alphabet_mode_main import predict_labels_from_frames, predict_words_from_frames, predict_words_from_frames_range
+from alphabet_mode_main import predict_words_from_frames
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 PATH_TO_VIDEOS = './Words/Videos'
 PATH_TO_FRAMES = './Words/Frames'
 PATH_TO_HAND_FRAMES = './Words/Hand_Frames'
 PATH_TO_RESULTS = './Words/results.csv'
+
 
 def clean_dirs():
     for root, dirs, files in os.walk(PATH_TO_FRAMES):
@@ -28,70 +27,30 @@ def clean_dirs():
             shutil.rmtree(os.path.join(root, d))
 
 
-# get List of unhidden files
-def listdir_nohidden(path):
-    for f in os.listdir(path):
-        if not f.startswith('.'):
-            yield f
-
-def final_prediction(pred):
-    """ Returns the most common label from video frames as the final prediction """
-    # print( pred )
-    if not pred or len(pred) == 0:
-        return ' '
-    pred_final = Counter(pred).most_common(1)[0][0]
-    return pred_final
+def generate_posenet_keypoints():
+    print('\n**********Generating Posenet Keypoints for Videos**********\n')
+    os.system('python ./posenet/Frames_Extractor.py --path_to_videos=%s --path_to_frames=%s' % (PATH_TO_VIDEOS, PATH_TO_FRAMES))
+    os.system('node ./posenet/scale_to_videos.js %s' % (PATH_TO_FRAMES))
+    os.system('python ./posenet/convert_to_csv.py --path_to_videos=%s --path_to_frames=%s' % (PATH_TO_VIDEOS, PATH_TO_FRAMES))
 
 
+def segment_videos(video_name):
+    ''' 
+        We'll calculate the difference between positions of rights hand wrist points in consecutive frames. 
+        If the difference is greater than a certain threshold, we'll assume that there is a transition of letters of the word.
+    '''
 
-clean_dirs()
-
-# Folder to save hand frames
-if not os.path.exists(PATH_TO_FRAMES):
-    os.makedirs(PATH_TO_FRAMES)
-if not os.path.exists(PATH_TO_HAND_FRAMES):
-    os.makedirs(PATH_TO_HAND_FRAMES)
-
-# Initialise the prediction array
-arrPred = []
-
-os.system('python ./posenet/Frames_Extractor.py --path_to_videos=%s --path_to_frames=%s' % (PATH_TO_VIDEOS, PATH_TO_FRAMES))
-os.system('node ./posenet/scale_to_videos.js %s' % (PATH_TO_FRAMES))
-os.system('python ./posenet/convert_to_csv.py --path_to_videos=%s --path_to_frames=%s' % (PATH_TO_VIDEOS, PATH_TO_FRAMES))
-
-# Get list of test videos
-list_of_videos = listdir_nohidden(PATH_TO_VIDEOS)
-
-# Initialise predicted array
-predicted = []
-
-for video in list_of_videos:
-
-    # if video != 'CAGE.mp4': continue
-
-    path_to_file = PATH_TO_VIDEOS + '/' + video
-    video_name = video.split('.')[0]
-    print("Test video " + video + " loaded")
-
-    os.system('python ./hand_extractor/hand_extractor.py --source=%s --video=%s --frame_path=%s' % (path_to_file, video_name, PATH_TO_HAND_FRAMES))
-    # os.system('python ./hand_extractor.py --path_to_frames=%s --path_to_hand_frames=%s' % (PATH_TO_FRAMES + '/' + video_name, PATH_TO_HAND_FRAMES + '/' + video_name))
-
+    print('\n********** Segmenting Video: {0} **********\n'.format(video_name))
     keyptPosenet = pd.read_csv(PATH_TO_FRAMES + '/' + video_name + '/' + 'key_points.csv')
 
-    coordRWx = keyptPosenet.rightWrist_x
-    coordRWy = keyptPosenet.rightWrist_y
-    coordLWx = keyptPosenet.leftWrist_x
-    coordLWy = keyptPosenet.leftWrist_y
-
-    letters = []
-    lastframe = 0
+    rightWrist_x = keyptPosenet.rightWrist_x
+    rightWrist_y = keyptPosenet.rightWrist_y
     threshold = 20
     frame_arr = []
 
-
     for i in range(keyptPosenet.shape[0]-1):
-        dist = math.sqrt( ((coordRWx[i + 1] - coordRWx[i]) ** 2) + ((coordRWy[i + 1] - coordRWy[i]) ** 2))
-        if dist < threshold and coordRWy[i] < 600:
+        dist = math.sqrt( ((rightWrist_x[i + 1] - rightWrist_x[i]) ** 2) + ((rightWrist_y[i + 1] - rightWrist_y[i]) ** 2))
+        if dist < threshold and rightWrist_y[i] < 600:
             frame_arr.append(i)
     
     frames = []
@@ -114,20 +73,68 @@ for video in list_of_videos:
 
     print('Frames: ', frames)
 
-    # frames = [[0, 182], [188, 288], [295, 525], [535, 640], [645, 870], [880, 980], [995, 1160]] # CAGE
-    # frames = [[0, 170], [175, 266], [275, 489], [503, 587], [593, 756]] # EYE
+    return frames
 
+
+def predict_word(frames, video_name): 
+    print('\n********** Predict Video: {0} **********\n'.format(video_name))
+    letters = []
     for i in range(len(frames)):
-        # if i%2 == 0:
-        prediction_frames = predict_words_from_frames_range(PATH_TO_HAND_FRAMES + '/' + video_name, frames[i][0], frames[i][1])
-        prediction = final_prediction(prediction_frames)
+        prediction_frames = predict_words_from_frames(PATH_TO_HAND_FRAMES + '/' + video_name, frames[i][0], frames[i][1])
+        prediction = mode(prediction_frames)
         letters.append(prediction)
 
-    predword = ''.join(letters).upper()
-    actualLabel = video_name
-    print("\nTrue Value: " + actualLabel + " Prediction: " + predword)
-    predicted.append([predword, actualLabel])
+    return ''.join(letters).upper()
 
-df = DataFrame (predicted, columns=['predicted', 'actual'])
-print(classification_report(df.predicted, df.actual))
+
+def classification_report(df):
+    accuracy = []
+    for index, row in df.iterrows():
+        count = 0
+        for i in range(min(len(row['ground_truth']), len(row['predicted']))):
+            if row['ground_truth'][i] == row['predicted'][i]:
+                count += 1
+        accuracy.append(count * 100 / len(row['ground_truth']))
+    df['accuracy (%)'] = accuracy
+    return df
+
+
+
+clean_dirs()
+
+# Folder to save hand frames
+if not os.path.exists(PATH_TO_FRAMES):
+    os.makedirs(PATH_TO_FRAMES)
+if not os.path.exists(PATH_TO_HAND_FRAMES):
+    os.makedirs(PATH_TO_HAND_FRAMES)
+
+# Initialise predicted array
+output = []
+
+# Create posenet wrist points
+generate_posenet_keypoints()
+
+for root, dirs, files in os.walk(PATH_TO_VIDEOS):
+    for video in files:
+
+        print('\n' + '-'*100)
+
+        video_name = video.split('.')[0]
+
+        print('\n********** Extracting Hand Frames for Video: {0} **********\n'.format(video))
+        os.system('python ./hand_extractor.py --path_to_frames=%s --path_to_hand_frames=%s' % (PATH_TO_FRAMES + '/' + video_name, PATH_TO_HAND_FRAMES + '/' + video_name))
+        print('Hand Frames extracted for Video: {0}'.format(video))
+
+        frames = segment_videos(video_name)
+
+        prediction = predict_word(frames, video_name)
+        print('Prediction: {0}\tGround Truth: {1}'.format(prediction, video_name))
+        output.append([prediction, video_name])
+
+
+df = DataFrame(output, columns=['predicted', 'ground_truth'])
+print('\n' + '-'*100)
+df = classification_report(df)
+print(df)
+print('\nAverage Accuracy: {0}%\n'.format(df['accuracy (%)'].mean()))
 df.to_csv(PATH_TO_RESULTS)

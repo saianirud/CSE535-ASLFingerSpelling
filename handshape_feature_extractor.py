@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import tensorflow as tf
 
+
 keras = tf.keras
 load_model = keras.models.load_model
 Model = keras.models.Model
@@ -26,7 +27,7 @@ class HandShapeFeatureExtractor:
         if HandShapeFeatureExtractor.__single is None:
             real_model = load_model( os.path.join( BASE, 'cnn_model.h5' ) )
             self.model = real_model
-            HandShapeFeatureExtractor.__single = self
+            # HandShapeFeatureExtractor.__single = self
 
         else:
             raise Exception("This Class bears the model, so it is made Singleton")
@@ -63,9 +64,10 @@ class HandShapeFeatureExtractor:
 
     def extract_feature(self, image):
         try:
-            img_arr = self.__pre_process_input_image(image)
-            # input = tf.keras.Input(tensor=image)
-            return self.model.predict(img_arr)
+            test_image = tf.keras.utils.load_img(image, target_size = (256, 256))
+            test_image = tf.keras.utils.img_to_array(test_image)
+            test_image = np.expand_dims(test_image, axis = 0)
+            return self.model.predict(test_image)
         except Exception as e:
             raise
 
