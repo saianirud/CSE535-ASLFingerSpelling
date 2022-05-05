@@ -2,10 +2,12 @@
 
 ## How to run
 
+You need to have `node` and `python` installed on your environment to run this code.<br><br>
+
 1. Create the following directories `Letters/Videos`, `Words/Videos` and `asl-alphabet/asl_alphabet_train`.
-2. Put the videos of your alphabets in the directory `Letters/Videos/{your_name}/` and keep the video name as the alphabet name.
+2. Put the videos of your alphabets in the directory `Letters/Videos/{your_name}/` and keep the video name as the alphabet name.<br>
    Eg: `Letters/Videos/Bob/A.mp4`, `Letters/Videos/Alice/A.mp4`
-3. Put the videos of the words in the directory `Words/Videos/` and keep the video name as the word name.
+3. Put the videos of the words in the directory `Words/Videos/` and keep the video name as the word name.<br>
    Eg: `Words/Videos/ACE.mp4`
 4. Put the training dataset from Kaggle (https://www.kaggle.com/grassknoted/asl-alphabet) in the directory `asl-alphabet/asl_alphabet_train/`.
 5. Install the requirements using the command `pip install -r requirements.txt`.
